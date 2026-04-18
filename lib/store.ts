@@ -10,12 +10,12 @@ if (!fs.existsSync(FILES_DIR)) fs.mkdirSync(FILES_DIR, { recursive: true });
 
 // ── JSON Read/Write (Atomic) ──────────────────────────────
 
-export function readJSON<T>(filePath: string): T {
+export function readJSON<T>(filePath: string, fallback?: T): T {
   try {
     const raw = fs.readFileSync(filePath, "utf8");
     return JSON.parse(raw) as T;
   } catch {
-    return (Array.isArray(filePath) ? [] : {}) as T;
+    return (fallback ?? []) as T;
   }
 }
 

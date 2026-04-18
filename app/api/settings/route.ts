@@ -8,10 +8,19 @@ function maskToken(token?: string): string {
   return token.slice(0, 4) + "••••" + token.slice(-4);
 }
 
+function loadConfig(): Config {
+  const raw = readJSON<Config | Config[]>(PATHS.config, {} as Config);
+  if (Array.isArray(raw)) return raw[0] || ({} as Config);
+  return raw || ({} as Config);
+}
+
+function saveConfig(config: Config) {
+  writeJSON(PATHS.config, [config]);
+}
+
 // GET /api/settings — return current config (mask sensitive tokens)
 export async function GET() {
-  const configs = readJSON<Config[]>(PATHS.config);
-  const config = configs[0] || ({} as Config);
+  const config = loadConfig();
 
   return NextResponse.json({
     ...config,
@@ -28,8 +37,7 @@ export async function GET() {
 // POST /api/settings — update config (partial merge)
 export async function POST(req: NextRequest) {
   const body = await req.json();
-  const configs = readJSON<Config[]>(PATHS.config);
-  const config = configs[0] || ({} as Config);
+  const config = loadConfig();
 
   // Merge top-level and nested fields
   if (body.store_name !== undefined) config.store_name = body.store_name;
@@ -82,8 +90,7 @@ export async function POST(req: NextRequest) {
   if (body.saweria_token !== undefined) config.saweria_token = body.saweria_token;
   if (body.koalastore_api_key !== undefined) config.koalastore_api_key = body.koalastore_api_key;
 
-  configs[0] = config;
-  writeJSON(PATHS.config, configs);
+  saveConfig(config);
 
   return NextResponse.json({ success: true, config });
 }

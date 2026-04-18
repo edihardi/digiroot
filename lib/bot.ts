@@ -44,8 +44,9 @@ function getSession(chatId: number): SessionData {
 // ── Helpers ───────────────────────────────────────────────
 
 function loadConfig(): Config {
-  const configs = readJSON<Config[]>(PATHS.config);
-  return configs[0] || ({} as Config);
+  const raw = readJSON<Config | Config[]>(PATHS.config, {} as Config);
+  if (Array.isArray(raw)) return raw[0] || ({} as Config);
+  return raw || ({} as Config);
 }
 
 function loadProducts(): Product[] {
