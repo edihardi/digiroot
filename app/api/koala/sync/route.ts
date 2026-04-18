@@ -50,6 +50,7 @@ export async function POST() {
             productName,
             productId,
             category: ksp.category || "KoalaStore",
+            costPrice: variant.price,
             priceProduct: variant.price, // sell price = base + 0 profit initially
             ks_base_price: variant.price,
             profit: 0, // admin sets profit manually
