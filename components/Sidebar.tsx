@@ -125,7 +125,7 @@ export default function Sidebar() {
       <div className="fixed inset-x-0 top-0 z-40 flex h-14 items-center justify-between bg-sidebar px-4 md:hidden">
         <h2 className="flex items-center gap-2 text-lg font-extrabold text-white">
           <i className="fas fa-store text-primary" />
-          <span className="text-primary">Digi</span>root
+          <span><span className="text-primary">Digi</span>root</span>
         </h2>
         <button
           onClick={() => setMobileOpen(!mobileOpen)}

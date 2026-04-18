@@ -365,9 +365,9 @@ export default function SettingsModal() {
       <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={close} />
 
       {/* Modal */}
-      <div className="anim-card-enter relative z-10 mx-4 my-4 flex max-h-[calc(100vh-2rem)] w-full max-w-2xl flex-col rounded-xl border border-[#333] bg-[#1a1a2e] shadow-2xl md:my-8 md:max-h-[calc(100vh-4rem)]">
+      <div className="anim-card-enter relative z-10 mx-2 my-4 flex max-h-[calc(100vh-2rem)] w-full max-w-2xl flex-col overflow-hidden rounded-xl border border-[#333] bg-[#1a1a2e] shadow-2xl sm:mx-4 md:my-8 md:max-h-[calc(100vh-4rem)]">
         {/* Modal Header */}
-        <div className="flex shrink-0 items-center justify-between border-b border-[#333] px-6 py-4">
+        <div className="flex shrink-0 items-center justify-between border-b border-[#333] px-4 py-4 sm:px-6">
           <div className="flex items-center gap-3">
             <i className="fas fa-gear anim-spin-slow text-primary" />
             <h2 className="text-lg font-bold text-white">System Settings</h2>
@@ -389,7 +389,7 @@ export default function SettingsModal() {
         </div>
 
         {/* Modal Body — scrollable */}
-        <div className="flex-1 overflow-y-auto px-6 py-5">
+        <div className="flex-1 overflow-y-auto px-4 py-5 sm:px-6">
           {loading ? (
             <div className="flex items-center gap-3 py-10 text-muted justify-center">
               <i className="fas fa-spinner fa-spin" />
@@ -399,7 +399,7 @@ export default function SettingsModal() {
             <div className="space-y-6">
               {/* Bot Control */}
               <Section icon="fa-robot" iconColor="text-blue-400" title="Telegram Bot">
-                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div className="flex flex-col gap-3">
                   <div className="flex items-center gap-3">
                     <span
                       className={`h-3 w-3 shrink-0 rounded-full ${
@@ -418,14 +418,14 @@ export default function SettingsModal() {
                     </div>
                   </div>
                   <div className="flex gap-2">
-                    <button onClick={fetchBotStatus} className="neo-btn-secondary text-xs flex-1 sm:flex-none justify-center">
+                    <button onClick={fetchBotStatus} className="neo-btn-secondary text-xs flex-1 justify-center">
                       <i className="fas fa-rotate-right mr-1" />
                       Refresh
                     </button>
                     <button
                       onClick={handleBotRestart}
                       disabled={botRestarting}
-                      className="neo-btn-primary text-xs flex-1 sm:flex-none justify-center"
+                      className="neo-btn-primary text-xs flex-1 justify-center"
                     >
                       {botRestarting ? (
                         <i className="fas fa-spinner fa-spin mr-1.5" />
@@ -438,7 +438,7 @@ export default function SettingsModal() {
                 </div>
                 <div className="mt-4 border-t border-[#555] pt-4">
                   <label className="mb-1.5 block text-xs font-semibold text-muted">BOT TOKEN</label>
-                  <div className="flex gap-2">
+                  <div className="flex flex-col gap-2 sm:flex-row">
                     <input
                       type="password"
                       value={tokenBot}
@@ -555,7 +555,7 @@ export default function SettingsModal() {
                 </div>
 
                 {config.gatekeeper.enabled && (
-                  <div className="space-y-4 rounded-lg border-2 border-[#555] bg-white/5 p-4">
+                  <div className="space-y-4 rounded-lg border-2 border-[#555] bg-white/5 p-3 sm:p-4">
                     <h3 className="text-sm font-bold text-white">
                       <i className="fas fa-bullhorn mr-1.5 text-primary" />
                       Channel
@@ -673,7 +673,7 @@ export default function SettingsModal() {
                 {config.payment_method === "saweria" && (
                   <div className="mt-4 border-t border-[#555] pt-4">
                     <label className="mb-1.5 block text-xs font-semibold text-muted">SAWERIA TOKEN</label>
-                    <div className="flex gap-2">
+                    <div className="flex flex-col gap-2 sm:flex-row">
                       <input
                         type="password"
                         value={tokenSaweria}
@@ -730,7 +730,7 @@ export default function SettingsModal() {
                 {/* API Key */}
                 <div className="mb-4">
                   <label className="mb-1.5 block text-xs font-semibold text-muted">API KEY</label>
-                  <div className="flex gap-2">
+                  <div className="flex flex-col gap-2 sm:flex-row">
                     <input
                       type="password"
                       value={tokenKs}
@@ -805,8 +805,8 @@ export default function SettingsModal() {
                 {config.koalastore?.is_active && (
                   <div className="space-y-5">
                     {/* Balance */}
-                    <div className="rounded-lg border-2 border-[#555] bg-white/5 p-4">
-                      <div className="flex items-center justify-between">
+                    <div className="rounded-lg border-2 border-[#555] bg-white/5 p-3 sm:p-4">
+                      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                         <h3 className="text-sm font-bold text-white">
                           <i className="fas fa-wallet mr-1.5 text-emerald-400" />
                           Saldo KoalaStore
@@ -832,8 +832,8 @@ export default function SettingsModal() {
                     </div>
 
                     {/* Sync Products */}
-                    <div className="rounded-lg border-2 border-[#555] bg-white/5 p-4">
-                      <div className="flex items-center justify-between">
+                    <div className="rounded-lg border-2 border-[#555] bg-white/5 p-3 sm:p-4">
+                      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                         <h3 className="text-sm font-bold text-white">
                           <i className="fas fa-sync mr-1.5 text-blue-400" />
                           Sync Produk
@@ -860,7 +860,7 @@ export default function SettingsModal() {
 
                     {/* Bulk Profit Management */}
                     {ksProducts.length > 0 && (
-                      <div className="rounded-lg border-2 border-[#555] bg-white/5 p-4">
+                      <div className="rounded-lg border-2 border-[#555] bg-white/5 p-3 sm:p-4">
                         <h3 className="mb-3 text-sm font-bold text-white">
                           <i className="fas fa-coins mr-1.5 text-primary" />
                           Profit per Produk KoalaStore ({ksProducts.length} produk)
@@ -869,9 +869,9 @@ export default function SettingsModal() {
                           {ksProducts.map((p) => (
                             <div
                               key={p.productId}
-                              className="flex items-center gap-3 rounded bg-[#1a1a1a] px-3 py-2"
+                              className="flex flex-col gap-1 rounded bg-[#1a1a1a] px-3 py-2 sm:flex-row sm:items-center sm:gap-3"
                             >
-                              <div className="flex-1 min-w-0">
+                              <div className="min-w-0 flex-1">
                                 <div className="truncate text-xs font-medium text-white">
                                   {p.productName}
                                 </div>
@@ -890,7 +890,7 @@ export default function SettingsModal() {
                                       [p.productId]: Number(e.target.value) || 0,
                                     })
                                   }
-                                  className="neo-input w-24 text-right text-xs"
+                                  className="neo-input w-20 text-right text-xs sm:w-24"
                                 />
                               </div>
                             </div>
@@ -923,7 +923,7 @@ export default function SettingsModal() {
                 </p>
 
                 {/* Add new */}
-                <div className="mb-4 flex gap-2">
+                <div className="mb-4 flex flex-col gap-2 sm:flex-row">
                   <input
                     type="text"
                     value={newMasterId}
@@ -935,7 +935,7 @@ export default function SettingsModal() {
                   <button
                     onClick={handleAddMaster}
                     disabled={masterAdding || !newMasterId.trim()}
-                    className="neo-btn-primary text-sm"
+                    className="neo-btn-primary text-sm shrink-0"
                   >
                     {masterAdding ? (
                       <i className="fas fa-spinner fa-spin mr-1.5" />
@@ -954,12 +954,12 @@ export default function SettingsModal() {
                     {masters.map((m) => (
                       <div
                         key={m.id}
-                        className="flex items-center justify-between rounded-lg border-2 border-[#555] bg-white/5 px-4 py-3"
+                        className="flex items-center gap-2 rounded-lg border-2 border-[#555] bg-white/5 px-3 py-2.5 sm:px-4 sm:py-3"
                       >
-                        <div>
+                        <div className="min-w-0 flex-1">
                           <span className="text-sm font-medium text-white">{m.id}</span>
-                          <span className="ml-3 text-xs text-muted">
-                            Ditambah: {new Date(m.addedAt).toLocaleDateString("id-ID", {
+                          <span className="ml-2 text-[10px] text-muted sm:ml-3 sm:text-xs">
+                            {new Date(m.addedAt).toLocaleDateString("id-ID", {
                               day: "2-digit",
                               month: "short",
                               year: "numeric",
@@ -968,7 +968,7 @@ export default function SettingsModal() {
                         </div>
                         <button
                           onClick={() => handleDeleteMaster(m.id)}
-                          className="text-sm text-danger/70 transition-colors hover:text-danger"
+                          className="shrink-0 text-sm text-danger/70 transition-colors hover:text-danger"
                         >
                           <i className="fas fa-trash" />
                         </button>
@@ -1133,7 +1133,7 @@ export default function SettingsModal() {
         </div>
 
         {/* Modal Footer */}
-        <div className="flex shrink-0 items-center justify-end border-t border-[#333] px-6 py-4">
+        <div className="flex shrink-0 items-center justify-end border-t border-[#333] px-4 py-4 sm:px-6">
           <button
             onClick={close}
             className="neo-btn-secondary text-sm"
@@ -1171,12 +1171,12 @@ function Section({
   children: React.ReactNode;
 }) {
   return (
-    <div className="rounded-lg border border-[#333] bg-white/5 p-4">
+    <div className="rounded-lg border border-[#333] bg-white/5 p-3 sm:p-4">
       <h2 className="mb-4 flex items-center gap-2 text-base font-bold text-white">
         <i className={`fas ${icon} ${iconColor} ${SETTINGS_ICON_ANIM[icon] || ""}`} />
         {title}
       </h2>
-      <div className="min-w-0 overflow-x-hidden">{children}</div>
+      <div className="min-w-0">{children}</div>
     </div>
   );
 }

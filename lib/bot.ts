@@ -49,6 +49,10 @@ function loadConfig(): Config {
   return raw || ({} as Config);
 }
 
+function saveConfig(config: Config): void {
+  writeJSON(PATHS.config, [config]);
+}
+
 function loadProducts(): Product[] {
   return readJSON<Product[]>(PATHS.products);
 }
@@ -1638,14 +1642,22 @@ async function checkSaweriaExpiry(): Promise<void> {
   const remaining = config.saweria_token_exp - now;
   const threeHours = 3 * 60 * 60;
 
-  // Already expired
+  // Already expired — auto-switch to QRIS and notify
   if (remaining <= 0 && !saweriaExpiryNotified) {
     saweriaExpiryNotified = true;
+
+    // Auto-switch payment method to QRIS
+    if (config.payment_method === "saweria") {
+      config.payment_method = "qris";
+      saveConfig(config);
+      console.log("[Bot] Saweria token expired — payment method auto-switched to QRIS.");
+    }
+
     const msg =
       `🚨 *Token Saweria Expired!*\n\n` +
       `Token Saweria sudah kadaluarsa.\n` +
-      `Pembayaran otomatis via Saweria tidak akan berfungsi.\n\n` +
-      `Segera perbarui token di dashboard Settings.`;
+      `Metode pembayaran otomatis dialihkan ke *QRIS Statis (Manual)*.\n\n` +
+      `Segera perbarui token di dashboard Settings agar pembayaran otomatis kembali aktif.`;
     const ids = getMasterIds();
     for (const id of ids) {
       try { await botInstance.sendMessage(id, msg, { parse_mode: "Markdown" }); } catch {}
@@ -1665,7 +1677,7 @@ async function checkSaweriaExpiry(): Promise<void> {
         day: "2-digit", month: "long", year: "numeric",
         hour: "2-digit", minute: "2-digit", timeZone: "Asia/Jakarta",
       })} WIB\n\n` +
-      `Segera perbarui token di dashboard Settings\natau pembayaran otomatis akan berhenti.`;
+      `Segera perbarui token di dashboard Settings.\nJika tidak diperbarui, metode pembayaran akan otomatis beralih ke QRIS Statis.`;
     const ids = getMasterIds();
     for (const id of ids) {
       try { await botInstance.sendMessage(id, msg, { parse_mode: "Markdown" }); } catch {}
