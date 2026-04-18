@@ -124,11 +124,17 @@ export async function createSaweriaSnap(params: {
   });
 
   if (isAuthError(res.status)) {
+    const body = await res.text().catch(() => "");
+    console.error(`[Saweria] Auth error ${res.status} on createSaweriaSnap. Body: ${body}`);
     await notifyTokenExpired("createSaweriaSnap");
     throw new Error("Saweria Token expired. Admin telah dinotifikasi.");
   }
 
-  if (!res.ok) throw new Error(`Saweria API Error: ${res.statusText}`);
+  if (!res.ok) {
+    const body = await res.text().catch(() => "");
+    console.error(`[Saweria] API error ${res.status} on createSaweriaSnap. Body: ${body}`);
+    throw new Error(`Saweria API Error: ${res.status} ${res.statusText}`);
+  }
 
   const json = await res.json();
   return json.data;
