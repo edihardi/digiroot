@@ -290,8 +290,9 @@ async function sendPaginatedProducts(
   let text = `📃 *DAFTAR PRODUK* (Hal. ${safePage}/${totalPages})\n\n`;
   pageProducts.forEach((p, i) => {
     const globalIdx = start + i;
-    const stock = getStockCount(p.productName);
-    const stockIcon = stock > 0 ? "✅" : "❌";
+    const isKS = p.source === "koalastore";
+    const stock = isKS ? "Ready" : String(getStockCount(p.productName));
+    const stockIcon = isKS || Number(stock) > 0 ? "✅" : "❌";
     text += `*${globalIdx + 1}.* ${displayName(p.productName)}\n`;
     text += `   💰 Rp${formatPrice(p.priceProduct)} | ${stockIcon} Stok: ${stock}\n\n`;
   });
@@ -426,16 +427,18 @@ async function sendVariantList(
 
   let variantMsg = `🗂️ *Pilih Produk:*\n📂 Kategori: *${category}*\n\n📦 *Stok:*\n`;
   variants.forEach((v) => {
-    variantMsg += `🔹 ${displayName(v.productName)} — Stok: *${getStockCount(v.productName)}*\n`;
+    const vStock = v.source === "koalastore" ? "Ready" : String(getStockCount(v.productName));
+    variantMsg += `🔹 ${displayName(v.productName)} — Stok: *${vStock}*\n`;
   });
 
   const variantInline: IKB = variants.map((v) => {
     const globalIdx = products.findIndex(
       (p) => p.productName === v.productName
     );
+    const vStock = v.source === "koalastore" ? "Ready" : String(getStockCount(v.productName));
     return [
       {
-        text: `${displayName(v.productName)} (Stok: ${getStockCount(v.productName)})`,
+        text: `${displayName(v.productName)} (Stok: ${vStock})`,
         callback_data: `variant_${globalIdx}`,
       },
     ];
@@ -501,8 +504,10 @@ async function sendStokView(
   } else {
     stockMsg = "📦 *STATUS STOK SEMUA PRODUK:*\n\n";
     products.forEach((p) => {
-      const s = getStockCount(p.productName);
-      stockMsg += `🔹 *${displayName(p.productName)}* — Stok: *${s}* ${s > 0 ? "✅" : "❌"}\n`;
+      const isKS = p.source === "koalastore";
+      const s = isKS ? "Ready" : String(getStockCount(p.productName));
+      const icon = isKS || Number(s) > 0 ? "✅" : "❌";
+      stockMsg += `🔹 *${displayName(p.productName)}* — Stok: *${s}* ${icon}\n`;
     });
   }
 
@@ -1771,8 +1776,9 @@ export async function startBot(): Promise<void> {
       priceList += `⏰ _Last Update: ${now}_\n\n`;
 
       products.forEach((product) => {
-        const stockVal = getStockCount(product.productName);
-        const stockIcon = stockVal > 0 ? "✅ Ready" : "❌ Habis";
+        const isKS = product.source === "koalastore";
+        const stockVal = isKS ? "Ready" : String(getStockCount(product.productName));
+        const stockIcon = isKS || Number(stockVal) > 0 ? "✅ Ready" : "❌ Habis";
 
         priceList += `🔹 *${displayName(product.productName).toUpperCase()}*\n`;
         priceList += `├ Harga : *Rp${formatPrice(product.priceProduct)}*\n`;
