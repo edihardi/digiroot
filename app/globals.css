@@ -1,26 +1,327 @@
+@import url("https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap");
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --primary: #f0c419;
+  --primary-hover: #dbb015;
+  --sidebar-bg: #1e1e2d;
+  --bg-page: #121212;
+  --card-bg: #1e1e1e;
+  --border-color: #333333;
+  --text-main: #f3f4f6;
+  --text-muted: #9ca3af;
+  --success: #10b981;
+  --danger: #ef4444;
+  --input-bg: #2d2d2d;
+  --shadow-sm: 2px 2px 0px 0px #555;
+  --shadow-md: 4px 4px 0px 0px #555;
+  --card-border: 2px solid #555;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-primary: var(--primary);
+  --color-primary-hover: var(--primary-hover);
+  --color-sidebar: var(--sidebar-bg);
+  --color-page: var(--bg-page);
+  --color-card: var(--card-bg);
+  --color-border: var(--border-color);
+  --color-main: var(--text-main);
+  --color-muted: var(--text-muted);
+  --color-success: var(--success);
+  --color-danger: var(--danger);
+  --color-input: var(--input-bg);
+  --font-sans: "Outfit", sans-serif;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+* {
+  box-sizing: border-box;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  margin: 0;
+  font-family: "Outfit", sans-serif;
+  background: var(--bg-page);
+  color: var(--text-main);
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.1);
+}
+::-webkit-scrollbar-thumb {
+  background: #555;
+  border-radius: 10px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #777;
+}
+
+/* ── Neo-Brutalist Components ── */
+
+.neo-card {
+  background: var(--card-bg);
+  border: 2px solid #555;
+  border-radius: 0.5rem;
+  padding: 1.25rem;
+  box-shadow: 4px 4px 0px 0px #555;
+}
+
+.neo-input {
+  background: var(--input-bg);
+  border: 2px solid #555;
+  border-radius: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  color: var(--text-main);
+  font-size: 0.875rem;
+  outline: none;
+  transition: border-color 0.15s;
+}
+.neo-input::placeholder {
+  color: #666;
+}
+.neo-input:focus {
+  border-color: var(--primary);
+}
+
+.neo-btn-primary {
+  display: inline-flex;
+  align-items: center;
+  background: var(--primary);
+  color: #000;
+  border: 2px solid #000;
+  border-radius: 0.5rem;
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 700;
+  box-shadow: 3px 3px 0px 0px #000;
+  transition: all 0.1s;
+  cursor: pointer;
+}
+.neo-btn-primary:hover {
+  transform: translate(1px, 1px);
+  box-shadow: 2px 2px 0px 0px #000;
+  background: var(--primary-hover);
+}
+.neo-btn-primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.neo-btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  background: transparent;
+  color: var(--text-muted);
+  border: 2px solid #555;
+  border-radius: 0.5rem;
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  transition: all 0.15s;
+  cursor: pointer;
+}
+.neo-btn-secondary:hover {
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text-main);
+}
+
+.neo-btn-danger {
+  display: inline-flex;
+  align-items: center;
+  background: var(--danger);
+  color: #fff;
+  border: 2px solid #000;
+  border-radius: 0.5rem;
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 700;
+  box-shadow: 3px 3px 0px 0px #000;
+  transition: all 0.1s;
+  cursor: pointer;
+}
+.neo-btn-danger:hover {
+  transform: translate(1px, 1px);
+  box-shadow: 2px 2px 0px 0px #000;
+}
+
+/* Hide scrollbar for snap-scroll containers */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+/* ── Dashboard icon animations ── */
+
+/* Receipt / transaction — subtle stamp effect */
+@keyframes icon-stamp {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.15) rotate(-3deg); }
+}
+.anim-stamp { animation: icon-stamp 2s ease-in-out infinite; }
+
+/* Calendar — gentle tick/flip */
+@keyframes icon-tick {
+  0%, 100% { transform: rotateX(0deg); }
+  50% { transform: rotateX(15deg); }
+}
+.anim-tick { animation: icon-tick 3s ease-in-out infinite; }
+
+/* Chart line — draw/grow upward */
+@keyframes icon-grow {
+  0%, 100% { transform: scaleY(1); }
+  50% { transform: scaleY(1.15) translateY(-2px); }
+}
+.anim-grow { animation: icon-grow 2.5s ease-in-out infinite; }
+
+/* Money — wave / float */
+@keyframes icon-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-3px); }
+}
+.anim-float { animation: icon-float 2s ease-in-out infinite; }
+
+/* Piggy bank — jiggle / shake */
+@keyframes icon-jiggle {
+  0%, 100% { transform: rotate(0deg); }
+  25% { transform: rotate(5deg); }
+  75% { transform: rotate(-5deg); }
+}
+.anim-jiggle { animation: icon-jiggle 2.5s ease-in-out infinite; }
+
+/* Wallet — open/close peek */
+@keyframes icon-peek {
+  0%, 100% { transform: scaleX(1); }
+  50% { transform: scaleX(1.1) translateX(1px); }
+}
+.anim-peek { animation: icon-peek 3s ease-in-out infinite; }
+
+/* Coins — spin shimmer */
+@keyframes icon-spin-y {
+  0%, 100% { transform: rotateY(0deg); }
+  50% { transform: rotateY(180deg); }
+}
+.anim-coin { animation: icon-spin-y 3s ease-in-out infinite; }
+
+/* Users — subtle bounce */
+@keyframes icon-bounce {
+  0%, 100% { transform: translateY(0); }
+  30% { transform: translateY(-3px); }
+  60% { transform: translateY(0); }
+}
+.anim-bounce { animation: icon-bounce 2s ease-in-out infinite; }
+
+/* Box — gentle rock */
+@keyframes icon-rock {
+  0%, 100% { transform: rotate(0deg); }
+  33% { transform: rotate(6deg); }
+  66% { transform: rotate(-6deg); }
+}
+.anim-rock { animation: icon-rock 3s ease-in-out infinite; }
+
+/* Trophy — shimmer glow */
+@keyframes icon-shimmer {
+  0%, 100% { filter: brightness(1); transform: scale(1); }
+  50% { filter: brightness(1.3); transform: scale(1.08); }
+}
+.anim-shimmer { animation: icon-shimmer 2.5s ease-in-out infinite; }
+
+/* Clock — tick rotation */
+@keyframes icon-clock {
+  0%, 100% { transform: rotate(0deg); }
+  25% { transform: rotate(10deg); }
+  75% { transform: rotate(-5deg); }
+}
+.anim-clock { animation: icon-clock 3s ease-in-out infinite; }
+
+/* Alert bell — ring */
+@keyframes icon-ring {
+  0%, 100% { transform: rotate(0deg); }
+  10% { transform: rotate(12deg); }
+  20% { transform: rotate(-12deg); }
+  30% { transform: rotate(8deg); }
+  40% { transform: rotate(-8deg); }
+  50% { transform: rotate(0deg); }
+}
+.anim-ring { animation: icon-ring 3s ease-in-out infinite; }
+
+/* Bot pulse — alive indicator */
+@keyframes icon-pulse {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.1); opacity: 0.8; }
+}
+.anim-pulse { animation: icon-pulse 2s ease-in-out infinite; }
+
+/* Staggered card entrance */
+@keyframes card-enter {
+  from {
+    opacity: 0;
+    transform: translateY(16px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+.anim-card-enter {
+  animation: card-enter 0.4s ease-out both;
+}
+
+/* Section fade-in-up */
+@keyframes fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.anim-fade-in-up {
+  animation: fade-in-up 0.5s ease-out both;
+}
+
+/* Gear — slow spin */
+@keyframes spin-slow {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+.anim-spin-slow { animation: spin-slow 8s linear infinite; }
+
+/* Smooth attention blink */
+@keyframes attention-blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+.anim-attention {
+  animation: attention-blink 2s ease-in-out infinite;
+}
+
+/* Backdrop fade-in */
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* Toast animation */
+@keyframes slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.animate-slide-up {
+  animation: slide-up 0.2s ease-out;
 }
