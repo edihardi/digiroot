@@ -129,8 +129,7 @@ export default function LogsPage() {
       <div
         ref={logRef}
         className="neo-card anim-fade-in-up flex-1 overflow-y-auto font-mono text-xs leading-relaxed"
-        style={{ animationDelay: "200ms" }}
-        style={{ maxHeight: "calc(100vh - 260px)" }}
+        style={{ animationDelay: "200ms", maxHeight: "calc(100vh - 260px)" }}
       >
         {data.lines.length === 0 ? (
           <p className="text-center text-muted">Tidak ada log untuk tanggal ini.</p>
