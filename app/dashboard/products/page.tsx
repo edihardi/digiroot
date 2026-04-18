@@ -32,6 +32,7 @@ interface Product {
   source?: "koalastore";
   variant_code?: string;
   ks_base_price?: number;
+  stockCount?: number;
 }
 
 interface StockInfo {
@@ -288,7 +289,7 @@ export default function ProductsPage() {
                     {p.source === "koalastore" ? (
                       <span className="inline-flex items-center gap-1.5 rounded bg-purple-500/20 px-2.5 py-1 text-xs font-medium text-purple-300">
                         <i className="fas fa-cloud text-purple-400" />
-                        KoalaStore
+                        {p.stockCount ?? 0}
                       </span>
                     ) : (
                     <button
@@ -371,7 +372,7 @@ export default function ProductsPage() {
                     {p.source === "koalastore" ? (
                       <span className="inline-flex items-center gap-1.5 rounded bg-purple-500/20 px-2.5 py-1 text-xs font-medium text-purple-300">
                         <i className="fas fa-cloud text-purple-400" />
-                        KS
+                        {p.stockCount ?? 0}
                       </span>
                     ) : (
                     <button

@@ -36,6 +36,7 @@ export async function POST() {
           existing.usage = terms;
           existing.source = "koalastore";
           existing.variant_code = variant.code_variant;
+          existing.stockCount = variant.available_stock;
           updated++;
         } else {
           localProducts.push({
@@ -55,6 +56,7 @@ export async function POST() {
             usage: terms,
             source: "koalastore",
             variant_code: variant.code_variant,
+            stockCount: variant.available_stock,
           });
           added++;
         }

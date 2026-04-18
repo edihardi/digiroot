@@ -20,7 +20,7 @@ import {
 } from "./saweria";
 import type { Config, Product, Transaction } from "./types";
 import { chatLog } from "./logger";
-import { ksCreateOrder } from "./koala";
+import { ksCreateOrder, ksGetAllProducts } from "./koala";
 
 // ── Global State ──────────────────────────────────────────
 
@@ -162,7 +162,7 @@ async function handleProductSelection(
   const masterUser = isMaster(Number(session.data.userId || 0));
 
   const isKS = product.source === "koalastore";
-  const stock = isKS ? 999 : getStockCount(product.productName);
+  const stock = isKS ? (product.stockCount ?? 0) : getStockCount(product.productName);
   if (stock === 0) {
     const text = `❌ Stok habis untuk *${displayName(product.productName)}*.`;
     const markup = { inline_keyboard: getMainMenuKeyboard(masterUser) };
@@ -291,10 +291,9 @@ async function sendPaginatedProducts(
   pageProducts.forEach((p, i) => {
     const globalIdx = start + i;
     const isKS = p.source === "koalastore";
-    const stock = isKS ? "Ready" : String(getStockCount(p.productName));
-    const stockIcon = isKS || Number(stock) > 0 ? "✅" : "❌";
+    const stock = isKS ? (p.stockCount ?? 0) : getStockCount(p.productName);
     text += `*${globalIdx + 1}.* ${displayName(p.productName)}\n`;
-    text += `   💰 Rp${formatPrice(p.priceProduct)} | ${stockIcon} Stok: ${stock}\n\n`;
+    text += `   💰 Rp${formatPrice(p.priceProduct)} | ${stock > 0 ? "✅" : "❌"} Stok: ${stock}\n\n`;
   });
 
   // Navigation buttons
@@ -427,7 +426,7 @@ async function sendVariantList(
 
   let variantMsg = `🗂️ *Pilih Produk:*\n📂 Kategori: *${category}*\n\n📦 *Stok:*\n`;
   variants.forEach((v) => {
-    const vStock = v.source === "koalastore" ? "Ready" : String(getStockCount(v.productName));
+    const vStock = v.source === "koalastore" ? (v.stockCount ?? 0) : getStockCount(v.productName);
     variantMsg += `🔹 ${displayName(v.productName)} — Stok: *${vStock}*\n`;
   });
 
@@ -435,7 +434,7 @@ async function sendVariantList(
     const globalIdx = products.findIndex(
       (p) => p.productName === v.productName
     );
-    const vStock = v.source === "koalastore" ? "Ready" : String(getStockCount(v.productName));
+    const vStock = v.source === "koalastore" ? (v.stockCount ?? 0) : getStockCount(v.productName);
     return [
       {
         text: `${displayName(v.productName)} (Stok: ${vStock})`,
@@ -505,9 +504,8 @@ async function sendStokView(
     stockMsg = "📦 *STATUS STOK SEMUA PRODUK:*\n\n";
     products.forEach((p) => {
       const isKS = p.source === "koalastore";
-      const s = isKS ? "Ready" : String(getStockCount(p.productName));
-      const icon = isKS || Number(s) > 0 ? "✅" : "❌";
-      stockMsg += `🔹 *${displayName(p.productName)}* — Stok: *${s}* ${icon}\n`;
+      const s = isKS ? (p.stockCount ?? 0) : getStockCount(p.productName);
+      stockMsg += `🔹 *${displayName(p.productName)}* — Stok: *${s}* ${s > 0 ? "✅" : "❌"}\n`;
     });
   }
 
@@ -1043,10 +1041,10 @@ async function executePurchase(
   const session = getSession(chatId);
   const masterUser = isMaster(userInfo.id);
 
-  // Validate stock (skip for KoalaStore — availability managed externally)
+  // Validate stock
   const isKS = product.source === "koalastore";
-  const stock = isKS ? 999 : getStockCount(product.productName);
-  if (!isKS && quantity > stock) {
+  const stock = isKS ? (product.stockCount ?? 0) : getStockCount(product.productName);
+  if (quantity > stock) {
     const sent = await botInstance.sendMessage(
       chatId,
       `❌ Stok tidak cukup. Tersedia: ${stock}`,
@@ -1668,6 +1666,50 @@ async function checkSaweriaExpiry(): Promise<void> {
   }
 }
 
+// ── KoalaStore Stock Sync ────────────────────────────────
+
+let ksStockIntervalId: ReturnType<typeof setInterval> | null = null;
+
+function startKsStockSync(): void {
+  if (ksStockIntervalId) clearInterval(ksStockIntervalId);
+
+  // Sync every 15 minutes
+  ksStockIntervalId = setInterval(syncKsStock, 15 * 60 * 1000);
+  // Initial sync after 10 seconds (let bot finish starting)
+  setTimeout(syncKsStock, 10_000);
+  console.log("[Bot] KoalaStore stock sync started (every 15 min).");
+}
+
+async function syncKsStock(): Promise<void> {
+  const config = loadConfig();
+  if (!config.koalastore?.is_active) return;
+
+  try {
+    const ksProducts = await ksGetAllProducts();
+    const localProducts = readJSON<Product[]>(PATHS.products);
+    let changed = false;
+
+    for (const ksp of ksProducts) {
+      if (!ksp.variants) continue;
+      for (const variant of ksp.variants) {
+        const productId = `ks-${variant.code_variant}`;
+        const local = localProducts.find((p) => p.productId === productId);
+        if (local && local.stockCount !== variant.available_stock) {
+          local.stockCount = variant.available_stock;
+          changed = true;
+        }
+      }
+    }
+
+    if (changed) {
+      writeJSON(PATHS.products, localProducts);
+      console.log("[Bot] KoalaStore stock updated.");
+    }
+  } catch (err) {
+    console.error("[Bot] KoalaStore stock sync failed:", err instanceof Error ? err.message : err);
+  }
+}
+
 export async function startBot(): Promise<void> {
   const botToken = getTelegramToken();
   if (!botToken) {
@@ -1696,6 +1738,9 @@ export async function startBot(): Promise<void> {
 
   // Start Saweria token expiry reminder
   startSaweriaExpiryCheck();
+
+  // Start KoalaStore stock sync (every 15 min)
+  startKsStockSync();
 
   // Run startup recovery (async, non-blocking)
   runStartupRecovery().catch((err) =>
@@ -1777,8 +1822,8 @@ export async function startBot(): Promise<void> {
 
       products.forEach((product) => {
         const isKS = product.source === "koalastore";
-        const stockVal = isKS ? "Ready" : String(getStockCount(product.productName));
-        const stockIcon = isKS || Number(stockVal) > 0 ? "✅ Ready" : "❌ Habis";
+        const stockVal = isKS ? (product.stockCount ?? 0) : getStockCount(product.productName);
+        const stockIcon = stockVal > 0 ? "✅ Ready" : "❌ Habis";
 
         priceList += `🔹 *${displayName(product.productName).toUpperCase()}*\n`;
         priceList += `├ Harga : *Rp${formatPrice(product.priceProduct)}*\n`;
@@ -2114,9 +2159,9 @@ Selamat datang! Di sini Anda bisa membeli berbagai produk digital dengan harga t
 
         const product = session.data.selectedProduct as Product;
         const isKSProduct = product.source === "koalastore";
-        const stock = isKSProduct ? 999 : getStockCount(product.productName);
+        const stock = isKSProduct ? (product.stockCount ?? 0) : getStockCount(product.productName);
 
-        if (!isKSProduct && quantity > stock) {
+        if (quantity > stock) {
           const sent = await bot.sendMessage(
             chatId,
             `❌ Stok tidak cukup. Tersedia: ${stock}`
