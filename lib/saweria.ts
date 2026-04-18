@@ -61,8 +61,15 @@ async function notifyTokenExpired(context: string): Promise<void> {
   }
 }
 
-function isAuthError(status: number): boolean {
-  return status === 401 || status === 403;
+function isAuthError(status: number, body?: string): boolean {
+  if (status !== 401 && status !== 403) return false;
+  // Cloudflare block returns HTML, not a real auth error
+  if (body && body.trimStart().startsWith("<")) return false;
+  return true;
+}
+
+function isCloudflareBlock(body?: string): boolean {
+  return !!body && (body.includes("cloudflare") || body.includes("cf-error"));
 }
 
 // ── API Functions ─────────────────────────────────────────
@@ -123,15 +130,20 @@ export async function createSaweriaSnap(params: {
     }),
   });
 
-  if (isAuthError(res.status)) {
-    const body = await res.text().catch(() => "");
-    console.error(`[Saweria] Auth error ${res.status} on createSaweriaSnap. Body: ${body}`);
-    await notifyTokenExpired("createSaweriaSnap");
-    throw new Error("Saweria Token expired. Admin telah dinotifikasi.");
-  }
-
   if (!res.ok) {
     const body = await res.text().catch(() => "");
+
+    if (isCloudflareBlock(body)) {
+      console.error(`[Saweria] Cloudflare blocked request (${res.status})`);
+      throw new Error("Saweria tidak bisa diakses (Cloudflare block). Coba lagi nanti.");
+    }
+
+    if (isAuthError(res.status, body)) {
+      console.error(`[Saweria] Auth error ${res.status} on createSaweriaSnap`);
+      await notifyTokenExpired("createSaweriaSnap");
+      throw new Error("Saweria Token expired. Admin telah dinotifikasi.");
+    }
+
     console.error(`[Saweria] API error ${res.status} on createSaweriaSnap. Body: ${body}`);
     throw new Error(`Saweria API Error: ${res.status} ${res.statusText}`);
   }
@@ -177,11 +189,13 @@ export async function checkSaweriaUser(
           : `Bearer ${token}`,
       },
     });
-    if (isAuthError(res.status)) {
-      await notifyTokenExpired("checkSaweriaUser");
+    if (!res.ok) {
+      const body = await res.text().catch(() => "");
+      if (isAuthError(res.status, body)) {
+        await notifyTokenExpired("checkSaweriaUser");
+      }
       return { valid: false };
     }
-    if (!res.ok) return { valid: false };
     const json = await res.json();
     return { valid: true, data: json.data };
   } catch {
@@ -208,11 +222,13 @@ export async function getSaweriaTransactions(
         },
       }
     );
-    if (isAuthError(res.status)) {
-      await notifyTokenExpired("getSaweriaTransactions");
+    if (!res.ok) {
+      const body = await res.text().catch(() => "");
+      if (isAuthError(res.status, body)) {
+        await notifyTokenExpired("getSaweriaTransactions");
+      }
       return [];
     }
-    if (!res.ok) return [];
     const json = await res.json();
     return json.data || [];
   } catch {
