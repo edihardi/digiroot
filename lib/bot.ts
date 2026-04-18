@@ -998,73 +998,29 @@ async function sendDeliveryMessage(
   taken: string[],
   fields?: string[]
 ): Promise<void> {
-  const boxWidth = 55;
-  const contentWidth = boxWidth - 4;
-  const divider = "+" + "-".repeat(boxWidth - 2) + "+\n";
-
-  let msg = "```\n";
-  msg += "+" + "=".repeat(boxWidth - 2) + "+\n";
-  const title = "ORDER SUCCESS";
-  const pad = Math.max(0, Math.floor((boxWidth - 2 - title.length) / 2));
-  msg +=
-    "|" +
-    " ".repeat(pad) +
-    title +
-    " ".repeat(Math.max(0, boxWidth - 2 - title.length - pad)) +
-    "|\n";
-  msg += divider;
-
-  const prodLine = `PROD: ${product.productName.toUpperCase()}`;
-  const qtyLine = `QTY : ${quantity} ITEM`;
-  msg +=
-    "| " + prodLine.substring(0, contentWidth).padEnd(contentWidth) + " |\n";
-  msg +=
-    "| " + qtyLine.substring(0, contentWidth).padEnd(contentWidth) + " |\n";
-  msg += divider;
-
-  msg += "| ACCOUNT DETAILS:".padEnd(contentWidth + 2) + "|\n";
+  let msg = `✅ *ORDER SUCCESS*\n\n`;
+  msg += `📦 *${product.productName}*\n`;
+  msg += `🔢 Qty: ${quantity} item\n\n`;
+  msg += `🔐 *Detail Akun:*\n`;
 
   taken.forEach((line, idx) => {
     if (fields && fields.length > 1) {
       const parts = line.split("|");
       if (parts.length >= fields.length) {
         fields.forEach((field, fi) => {
-          const row = `${field}: ${parts[fi]}`;
-          msg +=
-            "| " +
-            row.substring(0, contentWidth).padEnd(contentWidth) +
-            " |\n";
+          msg += `${field}: \`${parts[fi].trim()}\`\n`;
         });
       } else {
-        msg +=
-          "| " +
-          line.substring(0, contentWidth).padEnd(contentWidth) +
-          " |\n";
+        msg += `\`${line.trim()}\`\n`;
       }
     } else {
-      msg +=
-        "| " +
-        line.substring(0, contentWidth).padEnd(contentWidth) +
-        " |\n";
+      msg += `\`${line.trim()}\`\n`;
     }
-    if (idx < taken.length - 1)
-      msg += "| ".padEnd(contentWidth + 2) + "|\n";
+    if (idx < taken.length - 1) msg += `\n`;
   });
 
-  msg += divider;
-  const footer = "TERIMA KASIH TELAH MEMBELI";
-  const footPad = Math.max(
-    0,
-    Math.floor((boxWidth - 2 - footer.length) / 2)
-  );
-  msg +=
-    "|" +
-    " ".repeat(footPad) +
-    footer +
-    " ".repeat(Math.max(0, boxWidth - 2 - footer.length - footPad)) +
-    "|\n";
-  msg += "+" + "=".repeat(boxWidth - 2) + "+\n";
-  msg += "```";
+  msg += `\n_Tap data di atas untuk menyalin._\n`;
+  msg += `\n🙏 Terima kasih telah membeli!`;
 
   await botInstance.sendMessage(chatId, msg, { parse_mode: "Markdown" });
 }
@@ -1643,24 +1599,26 @@ async function checkSaweriaExpiry(): Promise<void> {
   const threeHours = 3 * 60 * 60;
 
   // Already expired — auto-switch to QRIS and notify
-  if (remaining <= 0 && !saweriaExpiryNotified) {
-    saweriaExpiryNotified = true;
-
-    // Auto-switch payment method to QRIS
+  if (remaining <= 0) {
+    // Auto-switch payment method to QRIS (only once, check config each time)
     if (config.payment_method === "saweria") {
       config.payment_method = "qris";
+      config.saweria_auto_switched = true;
       saveConfig(config);
       console.log("[Bot] Saweria token expired — payment method auto-switched to QRIS.");
     }
 
-    const msg =
-      `🚨 *Token Saweria Expired!*\n\n` +
-      `Token Saweria sudah kadaluarsa.\n` +
-      `Metode pembayaran otomatis dialihkan ke *QRIS Statis (Manual)*.\n\n` +
-      `Segera perbarui token di dashboard Settings agar pembayaran otomatis kembali aktif.`;
-    const ids = getMasterIds();
-    for (const id of ids) {
-      try { await botInstance.sendMessage(id, msg, { parse_mode: "Markdown" }); } catch {}
+    if (!saweriaExpiryNotified) {
+      saweriaExpiryNotified = true;
+      const msg =
+        `🚨 *Token Saweria Expired!*\n\n` +
+        `Token Saweria sudah kadaluarsa.\n` +
+        `Metode pembayaran otomatis dialihkan ke *QRIS Statis (Manual)*.\n\n` +
+        `Segera perbarui token di dashboard Settings agar pembayaran otomatis kembali aktif.`;
+      const ids = getMasterIds();
+      for (const id of ids) {
+        try { await botInstance.sendMessage(id, msg, { parse_mode: "Markdown" }); } catch {}
+      }
     }
     return;
   }
@@ -1685,8 +1643,22 @@ async function checkSaweriaExpiry(): Promise<void> {
   }
 
   // Reset notified flag when token is renewed (exp changes to far future)
+  // Also auto-restore payment method if it was auto-switched
   if (remaining > threeHours) {
     saweriaExpiryNotified = false;
+    if (config.payment_method === "qris" && config.saweria_auto_switched) {
+      config.payment_method = "saweria";
+      config.saweria_auto_switched = false;
+      saveConfig(config);
+      console.log("[Bot] Saweria token renewed — payment method auto-restored to Saweria.");
+      const msg =
+        `✅ *Token Saweria Diperbarui!*\n\n` +
+        `Metode pembayaran otomatis dikembalikan ke *Saweria (QRIS Otomatis)*.`;
+      const ids = getMasterIds();
+      for (const id of ids) {
+        try { await botInstance.sendMessage(id, msg, { parse_mode: "Markdown" }); } catch {}
+      }
+    }
   }
 }
 

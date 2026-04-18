@@ -65,6 +65,7 @@ export interface Config {
   telegram_bot_token: string;
   saweria_token: string;
   saweria_token_exp?: number; // JWT expiry timestamp
+  saweria_auto_switched?: boolean; // true if payment was auto-switched to QRIS due to expired token
   koalastore_api_key: string;
   saweria: SaweriaConfig;
   store_name: string;

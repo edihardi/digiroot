@@ -133,7 +133,11 @@ export async function POST(req: NextRequest) {
     };
   }
 
-  if (body.payment_method !== undefined) config.payment_method = body.payment_method;
+  if (body.payment_method !== undefined) {
+    config.payment_method = body.payment_method;
+    // Reset auto-switch flag when admin manually changes payment method
+    config.saweria_auto_switched = false;
+  }
 
   // Token fields
   if (body.telegram_bot_token !== undefined) {
