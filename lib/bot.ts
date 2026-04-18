@@ -232,15 +232,12 @@ async function handleProductSelection(
   detailMsg += "╟──────────────────────────────────────╢\n";
   addRow("Harga", "Rp" + priceStr);
   addRow("Stok", stock + " Paket");
-  detailMsg += "╟──────────────────────────────────────╢\n";
-  addRow("Garansi", product.warranty || "-");
-  addRow("Aktivasi", product.activation || "-");
-  addRow("Email", product.email || "-");
   detailMsg += "╚══════════════════════════════════════╝\n";
   detailMsg += "```\n";
 
   detailMsg += `\n📝 *Deskripsi:* ${product.description || "-"}`;
-  detailMsg += `\n⚠️ *Aturan:* ${product.usage || "-"}`;
+  if (product.warranty) detailMsg += `\n🛡️ *Garansi:* ${product.warranty}`;
+  if (product.usage) detailMsg += `\n⚠️ *Aturan:* ${product.usage}`;
   detailMsg += `\n\n🔢 *Pilih jumlah atau Ketik Manual:*`;
 
   const sent = await botInstance.sendMessage(chatId, detailMsg, {

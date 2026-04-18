@@ -96,11 +96,16 @@ export async function createSaweriaSnap(params: {
 }> {
   const userId = decodeSaweriaUserId(params.token);
 
+  const authHeader = params.token.startsWith("Bearer ")
+    ? params.token
+    : `Bearer ${params.token}`;
+
   const res = await fetch(`${SAWERIA_BACKEND}/donations/snap/${userId}`, {
     method: "POST",
     headers: {
       ...defaultHeaders,
       "Content-Type": "application/json",
+      Authorization: authHeader,
     },
     body: JSON.stringify({
       agree: true,
