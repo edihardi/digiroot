@@ -29,6 +29,9 @@ interface Product {
   activation?: string;
   email?: string;
   usage?: string;
+  source?: "koalastore";
+  variant_code?: string;
+  ks_base_price?: number;
 }
 
 interface StockInfo {
@@ -84,10 +87,14 @@ export default function ProductsPage() {
     setProducts(data);
     setLoading(false);
 
-    // Fetch stock counts
+    // Fetch stock counts (skip KoalaStore products — stock managed externally)
     const map: Record<string, StockInfo> = {};
     await Promise.all(
       data.map(async (p) => {
+        if (p.source === "koalastore") {
+          map[p.productName] = { count: -1, preview: [] };
+          return;
+        }
         const sr = await fetch(`/api/stock/${encodeURIComponent(p.productName)}`);
         const sd = await sr.json();
         map[p.productName] = { count: sd.count, preview: sd.preview };
@@ -278,6 +285,12 @@ export default function ProductsPage() {
                 <div>
                   <span className="text-xs text-muted">Stok</span>
                   <div>
+                    {p.source === "koalastore" ? (
+                      <span className="inline-flex items-center gap-1.5 rounded bg-purple-500/20 px-2.5 py-1 text-xs font-medium text-purple-300">
+                        <i className="fas fa-cloud text-purple-400" />
+                        KoalaStore
+                      </span>
+                    ) : (
                     <button
                       onClick={() => { setStockModal(p.productName); setStockText(""); }}
                       className="inline-flex items-center gap-1.5 rounded bg-white/10 px-2.5 py-1 text-xs font-medium text-white transition-colors hover:bg-white/20"
@@ -285,6 +298,7 @@ export default function ProductsPage() {
                       <i className="fas fa-box-open text-primary" />
                       {stockMap[p.productName]?.count ?? "..."}
                     </button>
+                    )}
                   </div>
                 </div>
                 <div>
@@ -354,6 +368,12 @@ export default function ProductsPage() {
                     {formatRupiah(p.profit)}
                   </td>
                   <td className="px-4 py-3 text-center">
+                    {p.source === "koalastore" ? (
+                      <span className="inline-flex items-center gap-1.5 rounded bg-purple-500/20 px-2.5 py-1 text-xs font-medium text-purple-300">
+                        <i className="fas fa-cloud text-purple-400" />
+                        KS
+                      </span>
+                    ) : (
                     <button
                       onClick={() => {
                         setStockModal(p.productName);
@@ -364,6 +384,7 @@ export default function ProductsPage() {
                       <i className="fas fa-box-open text-primary" />
                       {stockMap[p.productName]?.count ?? "..."}
                     </button>
+                    )}
                   </td>
                   <td className="px-4 py-3 text-center text-muted">
                     {p.totalProdukTerjual}
