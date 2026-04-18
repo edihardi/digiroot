@@ -1611,6 +1611,73 @@ function stopCleanupJob(): void {
   }
 }
 
+// ── Saweria Token Expiry Reminder ────────────────────────
+
+let saweriaExpiryIntervalId: ReturnType<typeof setInterval> | null = null;
+let saweriaExpiryNotified = false;
+
+function startSaweriaExpiryCheck(): void {
+  if (saweriaExpiryIntervalId) clearInterval(saweriaExpiryIntervalId);
+  saweriaExpiryNotified = false;
+
+  // Check every 10 minutes
+  saweriaExpiryIntervalId = setInterval(checkSaweriaExpiry, 10 * 60 * 1000);
+  // Also check immediately on startup
+  checkSaweriaExpiry();
+  console.log("[Bot] Saweria token expiry check started (every 10 min).");
+}
+
+async function checkSaweriaExpiry(): Promise<void> {
+  const botInstance = getBotInstance();
+  if (!botInstance) return;
+
+  const config = loadConfig();
+  if (!config.saweria_token_exp) return;
+
+  const now = Date.now() / 1000;
+  const remaining = config.saweria_token_exp - now;
+  const threeHours = 3 * 60 * 60;
+
+  // Already expired
+  if (remaining <= 0 && !saweriaExpiryNotified) {
+    saweriaExpiryNotified = true;
+    const msg =
+      `🚨 *Token Saweria Expired!*\n\n` +
+      `Token Saweria sudah kadaluarsa.\n` +
+      `Pembayaran otomatis via Saweria tidak akan berfungsi.\n\n` +
+      `Segera perbarui token di dashboard Settings.`;
+    const ids = getMasterIds();
+    for (const id of ids) {
+      try { await botInstance.sendMessage(id, msg, { parse_mode: "Markdown" }); } catch {}
+    }
+    return;
+  }
+
+  // 3 hours before expiry
+  if (remaining > 0 && remaining <= threeHours && !saweriaExpiryNotified) {
+    saweriaExpiryNotified = true;
+    const hours = Math.floor(remaining / 3600);
+    const minutes = Math.floor((remaining % 3600) / 60);
+    const msg =
+      `⚠️ *Token Saweria Segera Expired!*\n\n` +
+      `⏳ Sisa waktu: ${hours > 0 ? `${hours} jam ` : ""}${minutes} menit\n` +
+      `📅 Expired: ${new Date(config.saweria_token_exp * 1000).toLocaleDateString("id-ID", {
+        day: "2-digit", month: "long", year: "numeric",
+        hour: "2-digit", minute: "2-digit", timeZone: "Asia/Jakarta",
+      })} WIB\n\n` +
+      `Segera perbarui token di dashboard Settings\natau pembayaran otomatis akan berhenti.`;
+    const ids = getMasterIds();
+    for (const id of ids) {
+      try { await botInstance.sendMessage(id, msg, { parse_mode: "Markdown" }); } catch {}
+    }
+  }
+
+  // Reset notified flag when token is renewed (exp changes to far future)
+  if (remaining > threeHours) {
+    saweriaExpiryNotified = false;
+  }
+}
+
 export async function startBot(): Promise<void> {
   const botToken = getTelegramToken();
   if (!botToken) {
@@ -1636,6 +1703,9 @@ export async function startBot(): Promise<void> {
 
   // Start background cleanup job for expired transactions
   startCleanupJob();
+
+  // Start Saweria token expiry reminder
+  startSaweriaExpiryCheck();
 
   // Run startup recovery (async, non-blocking)
   runStartupRecovery().catch((err) =>

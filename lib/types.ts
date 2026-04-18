@@ -64,6 +64,7 @@ export interface OrderNotifications {
 export interface Config {
   telegram_bot_token: string;
   saweria_token: string;
+  saweria_token_exp?: number; // JWT expiry timestamp
   koalastore_api_key: string;
   saweria: SaweriaConfig;
   store_name: string;

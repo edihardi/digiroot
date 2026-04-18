@@ -1,6 +1,60 @@
 import { NextRequest, NextResponse } from "next/server";
 import { readJSON, writeJSON, PATHS } from "@/lib/store";
+import { getBotInstance } from "@/lib/bot";
 import type { Config } from "@/lib/types";
+
+function decodeJwtExpiry(token: string): { exp: number; iat: number } | null {
+  try {
+    const parts = token.split(".");
+    if (parts.length !== 3) return null;
+    const payload = JSON.parse(Buffer.from(parts[1], "base64url").toString());
+    if (payload.exp) return { exp: payload.exp, iat: payload.iat || 0 };
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+function formatExpiry(exp: number): string {
+  const d = new Date(exp * 1000);
+  return d.toLocaleDateString("id-ID", {
+    day: "2-digit",
+    month: "long",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    timeZone: "Asia/Jakarta",
+  }) + " WIB";
+}
+
+function getTimeRemainingText(exp: number): string {
+  const now = Date.now() / 1000;
+  const diff = exp - now;
+  if (diff <= 0) return "sudah expired";
+  const days = Math.floor(diff / 86400);
+  const hours = Math.floor((diff % 86400) / 3600);
+  const minutes = Math.floor((diff % 3600) / 60);
+  if (days > 0) return `${days} hari ${hours} jam`;
+  if (hours > 0) return `${hours} jam ${minutes} menit`;
+  return `${minutes} menit`;
+}
+
+async function notifySaweriaExpiry(exp: number, masters: string[]) {
+  const bot = getBotInstance();
+  if (!bot || masters.length === 0) return;
+
+  const msg =
+    `🔑 *Token Saweria Diperbarui*\n\n` +
+    `📅 Kadaluarsa: ${formatExpiry(exp)}\n` +
+    `⏳ Sisa waktu: ${getTimeRemainingText(exp)}\n\n` +
+    `_Bot akan mengirim pengingat 3 jam sebelum expired._`;
+
+  for (const id of masters) {
+    try {
+      await bot.sendMessage(id, msg, { parse_mode: "Markdown" });
+    } catch {}
+  }
+}
 
 function maskToken(token?: string): string {
   if (!token) return "";
@@ -87,7 +141,17 @@ export async function POST(req: NextRequest) {
     // Sync to process.env so middleware picks it up without restart
     process.env.TELEGRAM_BOT_TOKEN = body.telegram_bot_token;
   }
-  if (body.saweria_token !== undefined) config.saweria_token = body.saweria_token;
+  if (body.saweria_token !== undefined) {
+    config.saweria_token = body.saweria_token;
+    const jwt = decodeJwtExpiry(body.saweria_token);
+    if (jwt) {
+      config.saweria_token_exp = jwt.exp;
+      // Notify admins about token expiry
+      const mastersRaw = readJSON<{ id: string }[]>(PATHS.masters, []);
+      const masterIds = mastersRaw.map((m) => m.id);
+      notifySaweriaExpiry(jwt.exp, masterIds).catch(() => {});
+    }
+  }
   if (body.koalastore_api_key !== undefined) config.koalastore_api_key = body.koalastore_api_key;
 
   saveConfig(config);

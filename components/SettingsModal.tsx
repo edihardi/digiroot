@@ -444,7 +444,7 @@ export default function SettingsModal() {
                       value={tokenBot}
                       onChange={(e) => setTokenBot(e.target.value)}
                       placeholder={config.telegram_bot_token_masked || "Masukkan bot token"}
-                      className="neo-input flex-1"
+                      className="neo-input min-w-0 flex-1"
                     />
                     <button
                       onClick={async () => {
@@ -679,7 +679,7 @@ export default function SettingsModal() {
                         value={tokenSaweria}
                         onChange={(e) => setTokenSaweria(e.target.value)}
                         placeholder={config.saweria_token_masked || "Masukkan Saweria token"}
-                        className="neo-input flex-1"
+                        className="neo-input min-w-0 flex-1"
                       />
                       <button
                         onClick={async () => {
@@ -736,7 +736,7 @@ export default function SettingsModal() {
                       value={tokenKs}
                       onChange={(e) => setTokenKs(e.target.value)}
                       placeholder={config.koalastore_api_key_masked || "Masukkan KoalaStore API Key"}
-                      className="neo-input flex-1"
+                      className="neo-input min-w-0 flex-1"
                     />
                     <button
                       onClick={async () => {
@@ -929,7 +929,7 @@ export default function SettingsModal() {
                     value={newMasterId}
                     onChange={(e) => setNewMasterId(e.target.value)}
                     placeholder="Telegram User ID (angka)"
-                    className="neo-input flex-1"
+                    className="neo-input min-w-0 flex-1"
                     onKeyDown={(e) => e.key === "Enter" && handleAddMaster()}
                   />
                   <button
@@ -1176,7 +1176,7 @@ function Section({
         <i className={`fas ${icon} ${iconColor} ${SETTINGS_ICON_ANIM[icon] || ""}`} />
         {title}
       </h2>
-      {children}
+      <div className="min-w-0 overflow-x-hidden">{children}</div>
     </div>
   );
 }
