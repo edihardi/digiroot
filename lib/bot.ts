@@ -145,6 +145,10 @@ function formatPrice(price: number): string {
   return price.toLocaleString("id-ID");
 }
 
+function displayName(name: string): string {
+  return name.replace(/^\[KS\]\s*/i, "");
+}
+
 // ── Product Detail ────────────────────────────────────────
 
 async function handleProductSelection(
@@ -160,7 +164,7 @@ async function handleProductSelection(
   const isKS = product.source === "koalastore";
   const stock = isKS ? 999 : getStockCount(product.productName);
   if (stock === 0) {
-    const text = `❌ Stok habis untuk *${product.productName}*.`;
+    const text = `❌ Stok habis untuk *${displayName(product.productName)}*.`;
     const markup = { inline_keyboard: getMainMenuKeyboard(masterUser) };
     if (editMessageId) {
       await botInstance.editMessageText(text, {
@@ -223,7 +227,7 @@ async function handleProductSelection(
 
   detailMsg +=
     "║ " +
-    product.productName.toUpperCase().padEnd(36, " ") +
+    displayName(product.productName).toUpperCase().padEnd(36, " ") +
     " ║\n";
   detailMsg += "╟──────────────────────────────────────╢\n";
   addRow("Harga", "Rp" + priceStr);
@@ -291,7 +295,7 @@ async function sendPaginatedProducts(
     const globalIdx = start + i;
     const stock = getStockCount(p.productName);
     const stockIcon = stock > 0 ? "✅" : "❌";
-    text += `*${globalIdx + 1}.* ${p.productName}\n`;
+    text += `*${globalIdx + 1}.* ${displayName(p.productName)}\n`;
     text += `   💰 Rp${formatPrice(p.priceProduct)} | ${stockIcon} Stok: ${stock}\n\n`;
   });
 
@@ -425,7 +429,7 @@ async function sendVariantList(
 
   let variantMsg = `🗂️ *Pilih Produk:*\n📂 Kategori: *${category}*\n\n📦 *Stok:*\n`;
   variants.forEach((v) => {
-    variantMsg += `🔹 ${v.productName} — Stok: *${getStockCount(v.productName)}*\n`;
+    variantMsg += `🔹 ${displayName(v.productName)} — Stok: *${getStockCount(v.productName)}*\n`;
   });
 
   const variantInline: IKB = variants.map((v) => {
@@ -434,7 +438,7 @@ async function sendVariantList(
     );
     return [
       {
-        text: `${v.productName} (Stok: ${getStockCount(v.productName)})`,
+        text: `${displayName(v.productName)} (Stok: ${getStockCount(v.productName)})`,
         callback_data: `variant_${globalIdx}`,
       },
     ];
@@ -501,7 +505,7 @@ async function sendStokView(
     stockMsg = "📦 *STATUS STOK SEMUA PRODUK:*\n\n";
     products.forEach((p) => {
       const s = getStockCount(p.productName);
-      stockMsg += `🔹 *${p.productName}* — Stok: *${s}* ${s > 0 ? "✅" : "❌"}\n`;
+      stockMsg += `🔹 *${displayName(p.productName)}* — Stok: *${s}* ${s > 0 ? "✅" : "❌"}\n`;
     });
   }
 
@@ -653,7 +657,7 @@ async function sendRiwayat(
       timeZone: "Asia/Jakarta",
     });
     const emoji = statusEmoji[tx.status] || "❓";
-    msg += `${i + 1}. ${emoji} *${tx.productName}* x${tx.quantity}\n`;
+    msg += `${i + 1}. ${emoji} *${displayName(tx.productName)}* x${tx.quantity}\n`;
     msg += `   💵 Rp${formatPrice(tx.amount)} | ${tx.method.toUpperCase()}\n`;
     msg += `   📅 ${date} | ${tx.status.toUpperCase()}\n`;
     msg += `   🔖 \`${tx.reference}\`\n\n`;
@@ -665,7 +669,7 @@ async function sendRiwayat(
   for (const tx of deliveredTx.slice(0, 5)) {
     inlineKeyboard.push([
       {
-        text: `📩 Kirim ulang: ${tx.productName}`,
+        text: `📩 Kirim ulang: ${displayName(tx.productName)}`,
         callback_data: `resend_${tx.reference}`,
       },
     ]);
@@ -905,7 +909,7 @@ async function deliverKoalaStore(
     await botInstance.sendDocument(
       chatId,
       txtBuffer,
-      { caption: `📄 Detail akun (${product.productName})` },
+      { caption: `📄 Detail akun (${displayName(product.productName)})` },
       { filename: `order-${reference}.txt`, contentType: "text/plain" }
     );
 
@@ -971,7 +975,7 @@ async function deliverLocalStock(
     await botInstance.sendDocument(
       chatId,
       txtBuffer,
-      { caption: `📄 Detail akun (${product.productName})` },
+      { caption: `📄 Detail akun (${displayName(product.productName)})` },
       { filename: `order-${reference}.txt`, contentType: "text/plain" }
     );
 
@@ -999,7 +1003,7 @@ async function sendDeliveryMessage(
   fields?: string[]
 ): Promise<void> {
   let msg = `✅ *ORDER SUCCESS*\n\n`;
-  msg += `📦 *${product.productName}*\n`;
+  msg += `📦 *${displayName(product.productName)}*\n`;
   msg += `🔢 Qty: ${quantity} item\n\n`;
   msg += `🔐 *Detail Akun:*\n`;
 
@@ -1069,7 +1073,7 @@ async function executePurchase(
 
   const sent = await botInstance.sendMessage(
     chatId,
-    `🛒 *Konfirmasi Order*\n\n📦 *${product.productName}*\n🔢 Qty: ${quantity}\n💰 Total: *Rp${formatPrice(totalAmount)}*\n💳 Metode: *${methodLabel}*\n\nLanjutkan pembayaran?`,
+    `🛒 *Konfirmasi Order*\n\n📦 *${displayName(product.productName)}*\n🔢 Qty: ${quantity}\n💰 Total: *Rp${formatPrice(totalAmount)}*\n💳 Metode: *${methodLabel}*\n\nLanjutkan pembayaran?`,
     {
       parse_mode: "Markdown",
       reply_markup: {
@@ -1158,7 +1162,7 @@ async function processSaweriaPayment(
 
     // Send QR
     const qrMsg = await botInstance.sendPhoto(chatId, qrBuffer, {
-      caption: `✅ Produk: *${product.productName}*\n\n💰 Qty: ${quantity}\n💰 Total: *Rp${formatPrice(paymentAmount)}*\n\n📌 Scan QR untuk membayar.\n⏰ Expired: *${expiryStr} WIB*\n\nSetelah bayar, klik tombol di bawah:`,
+      caption: `✅ Produk: *${displayName(product.productName)}*\n\n💰 Qty: ${quantity}\n💰 Total: *Rp${formatPrice(paymentAmount)}*\n\n📌 Scan QR untuk membayar.\n⏰ Expired: *${expiryStr} WIB*\n\nSetelah bayar, klik tombol di bawah:`,
       parse_mode: "Markdown",
       reply_markup: {
         inline_keyboard: [
@@ -1245,7 +1249,7 @@ async function processQrisStaticPayment(
   const path = await import("path");
   const qrisPath = path.join(process.cwd(), "public", "qris.jpeg");
 
-  const caption = `📱 *PEMBAYARAN QRIS STATIS*\n\n📦 Produk: *${product.productName}*\n🔢 Qty: ${quantity}\n💰 Total: *Rp${formatPrice(totalAmount)}*\n\n📌 *Instruksi:*\n1. Scan QR di atas\n2. Transfer tepat *Rp${formatPrice(totalAmount)}*\n3. Tunggu admin konfirmasi (maks 1x24 jam)\n\n🔖 Ref: \`${reference}\`\n\n_Jika ada kendala, hubungi /kontak_`;
+  const caption = `📱 *PEMBAYARAN QRIS STATIS*\n\n📦 Produk: *${displayName(product.productName)}*\n🔢 Qty: ${quantity}\n💰 Total: *Rp${formatPrice(totalAmount)}*\n\n📌 *Instruksi:*\n1. Scan QR di atas\n2. Transfer tepat *Rp${formatPrice(totalAmount)}*\n3. Tunggu admin konfirmasi (maks 1x24 jam)\n\n🔖 Ref: \`${reference}\`\n\n_Jika ada kendala, hubungi /kontak_`;
 
   try {
     if (fs.existsSync(qrisPath)) {
@@ -1483,7 +1487,7 @@ async function runTransactionCleanup(): Promise<void> {
         const timeoutLabel = tx.method === "qris" ? "24 jam" : "5 menit";
         await botInstance.sendMessage(
           tx.chatId,
-          `⏰ *Transaksi Expired*\n\n📦 Produk: ${tx.productName}\n🔖 Ref: \`${tx.reference}\`\n\nTransaksi melebihi batas waktu ${timeoutLabel}.\nSilakan order kembali jika diperlukan.`,
+          `⏰ *Transaksi Expired*\n\n📦 Produk: ${displayName(tx.productName)}\n🔖 Ref: \`${tx.reference}\`\n\nTransaksi melebihi batas waktu ${timeoutLabel}.\nSilakan order kembali jika diperlukan.`,
           { parse_mode: "Markdown" }
         );
       } catch {
@@ -1527,7 +1531,7 @@ async function runStartupRecovery(): Promise<void> {
         try {
           await botInstance.sendMessage(
             tx.chatId,
-            `⏰ *Transaksi Expired*\n\n📦 Produk: ${tx.productName}\n🔖 Ref: \`${tx.reference}\`\n\nTransaksi expired saat server restart.\nSilakan order kembali jika diperlukan.`,
+            `⏰ *Transaksi Expired*\n\n📦 Produk: ${displayName(tx.productName)}\n🔖 Ref: \`${tx.reference}\`\n\nTransaksi expired saat server restart.\nSilakan order kembali jika diperlukan.`,
             { parse_mode: "Markdown" }
           );
         } catch {}
@@ -1773,7 +1777,7 @@ export async function startBot(): Promise<void> {
         const stockVal = getStockCount(product.productName);
         const stockIcon = stockVal > 0 ? "✅ Ready" : "❌ Habis";
 
-        priceList += `🔹 *${product.productName.toUpperCase()}*\n`;
+        priceList += `🔹 *${displayName(product.productName).toUpperCase()}*\n`;
         priceList += `├ Harga : *Rp${formatPrice(product.priceProduct)}*\n`;
         priceList += `└ Stok  : *${stockVal}* (${stockIcon})\n\n`;
       });
@@ -2285,7 +2289,7 @@ Selamat datang! Di sini Anda bisa membeli berbagai produk digital dengan harga t
         await bot.sendDocument(
           chatId,
           txtBuffer,
-          { caption: `📩 *Kirim ulang:* ${tx.productName}\n🔖 Ref: \`${tx.reference}\`` },
+          { caption: `📩 *Kirim ulang:* ${displayName(tx.productName)}\n🔖 Ref: \`${tx.reference}\`` },
           { filename: `order-${tx.reference}.txt`, contentType: "text/plain" }
         );
         return;
@@ -2371,7 +2375,7 @@ export async function confirmQrisPayment(
   try {
     await botInstance.sendMessage(
       tx.chatId,
-      `✅ *Pembayaran dikonfirmasi!*\n\n📦 Produk: *${tx.productName}*\n💰 Total: *Rp${tx.amount.toLocaleString("id-ID")}*\n🔖 Ref: \`${reference}\`\n\nSedang memproses pesanan...`,
+      `✅ *Pembayaran dikonfirmasi!*\n\n📦 Produk: *${displayName(tx.productName)}*\n💰 Total: *Rp${tx.amount.toLocaleString("id-ID")}*\n🔖 Ref: \`${reference}\`\n\nSedang memproses pesanan...`,
       { parse_mode: "Markdown" }
     );
   } catch {

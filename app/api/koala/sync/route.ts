@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { readJSON, writeJSON, PATHS } from "@/lib/store";
-import { ksGetAllProducts, ksGetVariantTerms } from "@/lib/koala";
+import { ksGetAllProducts } from "@/lib/koala";
 import type { Product } from "@/lib/types";
 
 // POST /api/koala/sync — sync products from KoalaStore
@@ -16,22 +16,14 @@ export async function POST() {
       if (!ksp.variants || ksp.variants.length === 0) continue;
 
       for (const variant of ksp.variants) {
-        if (variant.status !== "available") continue;
+        if (variant.available_stock <= 0 && !variant.is_manual_process) continue;
 
-        const productId = `ks-${variant.code}`;
+        const productId = `ks-${variant.code_variant}`;
         const productName = `[KS] ${ksp.name} - ${variant.name}`;
         const existing = localProducts.find((p) => p.productId === productId);
 
-        // Fetch terms for warranty info
-        let warranty = "";
-        let terms = "";
-        try {
-          const vterms = await ksGetVariantTerms(ksp.code, variant.code);
-          warranty = vterms.warranty_terms || "";
-          terms = vterms.terms_and_conditions || "";
-        } catch {
-          // terms not available for this variant
-        }
+        const warranty = variant.warranty_terms || "";
+        const terms = variant.terms_and_conditions || "";
 
         if (existing) {
           // Update base price & description, recalculate sell price, keep profit
@@ -43,7 +35,7 @@ export async function POST() {
           existing.warranty = warranty;
           existing.usage = terms;
           existing.source = "koalastore";
-          existing.variant_code = variant.code;
+          existing.variant_code = variant.code_variant;
           updated++;
         } else {
           localProducts.push({
@@ -62,7 +54,7 @@ export async function POST() {
             email: "",
             usage: terms,
             source: "koalastore",
-            variant_code: variant.code,
+            variant_code: variant.code_variant,
           });
           added++;
         }

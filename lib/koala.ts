@@ -55,10 +55,13 @@ export interface KSBalance {
 }
 
 export interface KSVariant {
-  code: string;
+  code_variant: string;
   name: string;
   price: number;
-  status: string;
+  available_stock: number;
+  is_manual_process: boolean;
+  terms_and_conditions?: string;
+  warranty_terms?: string;
   [key: string]: unknown;
 }
 
@@ -121,7 +124,7 @@ export async function ksGetBalance(): Promise<KSBalance> {
 export async function ksGetProducts(
   page = 1,
   perPage = 50,
-  status: string[] = ["available"]
+  status: string[] = ["available", "manual"]
 ): Promise<{ data: KSProduct[]; meta: KSMeta }> {
   const params = new URLSearchParams();
   params.set("page", String(page));
